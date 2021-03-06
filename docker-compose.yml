@@ -5,12 +5,14 @@ services:
     build: .
     ports:
     - "8080:8080"
+    volumes:
+    - ./storage:/storage
 
 
   db:
-    image: mysql
+    image: postgres
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_PASSWORD: root
     ports:
-    - "3306:3306"
+    - "5432:5432"
 
