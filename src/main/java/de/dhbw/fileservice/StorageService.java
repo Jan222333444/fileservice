@@ -4,6 +4,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -32,8 +34,9 @@ public class StorageService implements IStorageService{
     }
 
     @Override
-    public Path load(String filename) {
-        return null;
+    public FileInputStream load(String filename) throws FileNotFoundException {
+
+        return new FileInputStream(filename);
     }
 
     @Override

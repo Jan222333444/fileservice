@@ -1,5 +1,11 @@
 .phony: build
 
+init:
+	@echo "Initialising..."
+	mkdir "storage"
+	make build
+
+
 build:
 	@echo "Building image ..."
 	mvn clean package
