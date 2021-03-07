@@ -160,7 +160,7 @@ public class FileServiceController {
             String out = "{\n";
             out += "    \"status\":200\n";
             out += "}";
-            ResponseEntity response = new ResponseEntity(out, HttpStatus.OK);
+            ResponseEntity response = new ResponseEntity(out, HttpStatus.CREATED);
             return response;
         } catch (Exception e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -170,6 +170,17 @@ public class FileServiceController {
 
     @PostMapping("api/addMetadata")
     public ResponseEntity addMetadata(@RequestParam("key") String key, @RequestParam("value") String value, @RequestParam("id") int id) {
+        Optional<DocumentEntity> optional = documentArchiveRepository.findById(id);
+        if(optional.isPresent()) {
+            DocumentEntity document = optional.get();
+            MetaDataEntity metaDataEntity = new MetaDataEntity();
+            metaDataEntity.setKey(key);
+            metaDataEntity.setValue(value);
+            metaDataEntity.setDocument(document);
+            metaDataRepository.save(metaDataEntity);
+            return new ResponseEntity("", HttpStatus.CREATED);
+        }
+
         return new ResponseEntity("", HttpStatus.NOT_IMPLEMENTED);
 
     }
