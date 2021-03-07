@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 *.docx
-*.xslx
+*.xlsx
 
 ### STS ###
 .apt_generated

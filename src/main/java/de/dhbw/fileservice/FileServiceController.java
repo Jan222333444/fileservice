@@ -4,6 +4,9 @@ import de.dhbw.fileservice.entity.DocumentEntity;
 import de.dhbw.fileservice.entity.DocumentRepository;
 import de.dhbw.fileservice.entity.MetaDataEntity;
 import de.dhbw.fileservice.entity.MetaDataRepository;
+import org.apache.poi.ooxml.POIXMLProperties;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +15,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,17 +46,21 @@ public class FileServiceController {
         Optional<DocumentEntity> entity = documentArchiveRepository.findById(id);
         if(entity.isPresent()){
             DocumentEntity documentEntity = entity.get();
-            if(documentEntity.getName().split("\\.")[1].equals("docx")){
+            if(documentEntity.getPath().split("\\.")[1].equals("docx")){
                 XWPFDocument wordDocument = new XWPFDocument(storageService.load("/storage/"+documentEntity.getPath()));
                 XWPFWordExtractor extractor = new XWPFWordExtractor(wordDocument);
                 return extractor.getText();
+            }else if (documentEntity.getPath().split("\\.")[1].equals("xlsx")) {
+                XSSFWorkbook workbook = new XSSFWorkbook(storageService.load("/storage/"+documentEntity.getPath()));
+                return workbook.getPrintArea(0);
             }
+
         }
-        return ""+id;
+        return "";
     }
 
     @PostMapping("api/addDocument")
-    public ResponseEntity addDocument(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity addDocument(@RequestParam("file") MultipartFile file) {
         try {
 
             if(file == null || file.isEmpty()){
@@ -61,15 +74,36 @@ public class FileServiceController {
             document.setName(name);
             documentArchiveRepository.save(document);
             FileInputStream fileInputStream = (FileInputStream) file.getInputStream();
-            XWPFDocument wordDocument = new XWPFDocument(fileInputStream);
-            XWPFWordExtractor extractor = new XWPFWordExtractor(wordDocument);
-            //String extractedText = extractor.getText();
-            String creator = extractor.getDocument().getProperties().getCoreProperties().getCreator();
-            MetaDataEntity metaDataEntity = new MetaDataEntity();
-            metaDataEntity.setKey("Author");
-            metaDataEntity.setValue(creator);
-            metaDataEntity.setDocument(document);
-            metaDataRepository.save(metaDataEntity);
+            if(path.split("\\.")[1].equals("docx")){
+                XWPFDocument wordDocument = new XWPFDocument(fileInputStream);
+                XWPFWordExtractor extractor = new XWPFWordExtractor(wordDocument);
+                String creator = extractor.getDocument().getProperties().getCoreProperties().getCreator();
+                Date created = extractor.getDocument().getProperties().getCoreProperties().getCreated();
+                MetaDataEntity metaDataEntity = new MetaDataEntity();
+                metaDataEntity.setKey("Author");
+                metaDataEntity.setValue(creator);
+                metaDataEntity.setDocument(document);
+                metaDataRepository.save(metaDataEntity);
+                MetaDataEntity createdData = new MetaDataEntity();
+                createdData.setDocument(document);
+                createdData.setKey("Created");
+                createdData.setValue(created.toString());
+                metaDataRepository.save(createdData);
+            } else if(path.split("\\.")[1].equals("xlsx")){
+                XSSFWorkbook workbook = new XSSFWorkbook(fileInputStream);
+                POIXMLProperties properties = workbook.getProperties();
+                MetaDataEntity metaDataEntity = new MetaDataEntity();
+                metaDataEntity.setDocument(document);
+                metaDataEntity.setKey("Author");
+                metaDataEntity.setValue(properties.getCoreProperties().getCreator());
+                metaDataRepository.save(metaDataEntity);
+                MetaDataEntity createdData = new MetaDataEntity();
+                createdData.setDocument(document);
+                createdData.setKey("Created");
+                createdData.setValue(properties.getCoreProperties().getCreated().toString());
+                metaDataRepository.save(createdData);
+            }
+
             String out = "{\n";
             out += "    \"status\":200\n";
             out += "}";
@@ -85,5 +119,19 @@ public class FileServiceController {
     public ResponseEntity addMetadata(@RequestParam("key") String key, @RequestParam("value") String value, @RequestParam("id")int id){
         return new ResponseEntity("", HttpStatus.NOT_IMPLEMENTED);
 
+    }
+
+    @GetMapping("api/getDocument/{id}")
+    public void getDocument(HttpServletRequest request, HttpServletResponse response, @PathVariable int id) throws IOException {
+        Optional<DocumentEntity> documentEntity = documentArchiveRepository.findById(id);
+        if(documentEntity.isPresent()){
+            DocumentEntity document = documentEntity.get();
+            FileOutputStream stream = new FileOutputStream("/storage/"+document.getPath());
+            Path file = Paths.get("storage", document.getPath());
+            response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            response.addHeader("Content-Disposition", "attachment; filename="+document.getName());
+            Files.copy(file, response.getOutputStream());
+            response.getOutputStream().flush();
+        }
     }
 }
