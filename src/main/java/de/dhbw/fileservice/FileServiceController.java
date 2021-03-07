@@ -192,7 +192,11 @@ public class FileServiceController {
             DocumentEntity document = documentEntity.get();
             FileOutputStream stream = new FileOutputStream("/storage/" + document.getPath());
             Path file = Paths.get("storage", document.getPath());
-            response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            if(document.getPath().split("\\.")[1].equals("docx")){
+                response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            }else if(document.getPath().split("\\.")[1].equals("xlsx")) {
+                response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
             response.addHeader("Content-Disposition", "attachment; filename=" + document.getName());
             Files.copy(file, response.getOutputStream());
             response.getOutputStream().flush();
