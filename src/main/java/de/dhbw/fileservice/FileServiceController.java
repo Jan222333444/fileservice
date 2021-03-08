@@ -197,8 +197,8 @@ public class FileServiceController {
 
     }
 
-    @GetMapping("api/getDocument/?{path}")
-    public void getDocument(HttpServletRequest request, HttpServletResponse response, @PathVariable String path) throws IOException {
+    @GetMapping("api/getDocument")
+    public void getDocument(HttpServletRequest request, HttpServletResponse response,@RequestParam("path") String path) throws IOException {
         Optional<DocumentEntity> documentEntity = documentArchiveRepository.findByPath(path);
         if (documentEntity.isPresent()) {
             DocumentEntity document = documentEntity.get();
