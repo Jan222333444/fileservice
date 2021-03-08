@@ -14,7 +14,9 @@ import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -80,7 +82,13 @@ public class FileServiceController {
 
     @GetMapping("api/getTexts/{ids}")
     public ResponseEntity getTexts(@PathVariable String ids) {
-        String[] idArray = ids.split(",");
+        String[] idArray;
+        if(ids.contains(",")) {
+            idArray = ids.split(",");
+        } else {
+            idArray = new String[1];
+            idArray[0] = ids;
+        }
         TextExtractionResultWrapper wrapper = new TextExtractionResultWrapper();
         wrapper.textExtractionResults = new TextExtractionResult[idArray.length];
         int i = 0;
@@ -106,7 +114,11 @@ public class FileServiceController {
 
         }
         try {
-            return new ResponseEntity(new ObjectMapper().writeValueAsString(wrapper), HttpStatus.OK);
+            String body = new ObjectMapper().writeValueAsString(wrapper);
+            HttpHeaders responseHeader = new HttpHeaders();
+            responseHeader.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity entity = ResponseEntity.ok().headers(responseHeader).body(body);
+            return entity;
         } catch (JsonProcessingException e) {
             return new ResponseEntity("", HttpStatus.INTERNAL_SERVER_ERROR);
         }
