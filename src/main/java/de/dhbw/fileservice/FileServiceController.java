@@ -197,9 +197,9 @@ public class FileServiceController {
 
     }
 
-    @GetMapping("api/getDocument/{id}")
-    public void getDocument(HttpServletRequest request, HttpServletResponse response, @PathVariable int id) throws IOException {
-        Optional<DocumentEntity> documentEntity = documentArchiveRepository.findById(id);
+    @GetMapping("api/getDocument/{path}")
+    public void getDocument(HttpServletRequest request, HttpServletResponse response, @PathVariable String path) throws IOException {
+        Optional<DocumentEntity> documentEntity = documentArchiveRepository.findByPath(path);
         if (documentEntity.isPresent()) {
             DocumentEntity document = documentEntity.get();
             FileOutputStream stream = new FileOutputStream("/storage/" + document.getPath());
@@ -213,5 +213,7 @@ public class FileServiceController {
             Files.copy(file, response.getOutputStream());
             response.getOutputStream().flush();
         }
+
+
     }
 }
