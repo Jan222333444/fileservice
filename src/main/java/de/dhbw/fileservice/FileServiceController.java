@@ -126,6 +126,7 @@ public class FileServiceController {
 
     @PostMapping("api/addDocument")
     public ResponseEntity addDocument(@RequestParam("file") MultipartFile file) {
+        DocumentEntity document = new DocumentEntity();
         try {
 
             if (file == null || file.isEmpty()) {
@@ -134,7 +135,6 @@ public class FileServiceController {
             String path = storageService.store(file);
 
             String name = file.getOriginalFilename();
-            DocumentEntity document = new DocumentEntity();
             document.setPath(path);
             document.setName(name);
             documentArchiveRepository.save(document);
@@ -175,6 +175,7 @@ public class FileServiceController {
             ResponseEntity response = new ResponseEntity(out, HttpStatus.CREATED);
             return response;
         } catch (Exception e) {
+            documentArchiveRepository.delete(document);
             return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
