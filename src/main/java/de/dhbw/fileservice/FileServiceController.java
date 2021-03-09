@@ -167,6 +167,9 @@ public class FileServiceController {
                 createdData.setKey("Created");
                 createdData.setValue(properties.getCoreProperties().getCreated().toString());
                 metaDataRepository.save(createdData);
+            }else{
+                documentArchiveRepository.delete(document);
+                return new ResponseEntity("", HttpStatus.BAD_REQUEST);
             }
 
             String out = "{\n";
