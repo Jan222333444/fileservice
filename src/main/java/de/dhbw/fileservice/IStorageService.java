@@ -1,5 +1,6 @@
 package de.dhbw.fileservice;
 
+import de.dhbw.fileservice.entity.DocumentEntity;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,5 +23,7 @@ public interface IStorageService {
     Resource loadAsResource(String filename);
 
     void deleteAll();
+
+    void delete(DocumentEntity documentEntity) throws IOException;
 
 }

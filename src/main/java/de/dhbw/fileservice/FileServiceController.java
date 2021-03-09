@@ -125,7 +125,7 @@ public class FileServiceController {
     }
 
     @PostMapping("api/addDocument")
-    public ResponseEntity addDocument(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity addDocument(@RequestParam("file") MultipartFile file) throws IOException {
         DocumentEntity document = new DocumentEntity();
         try {
 
@@ -169,6 +169,7 @@ public class FileServiceController {
                 metaDataRepository.save(createdData);
             }else{
                 documentArchiveRepository.delete(document);
+                storageService.delete(document);
                 return new ResponseEntity("", HttpStatus.BAD_REQUEST);
             }
 
@@ -179,6 +180,7 @@ public class FileServiceController {
             return response;
         } catch (Exception e) {
             documentArchiveRepository.delete(document);
+            storageService.delete(document);
             return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

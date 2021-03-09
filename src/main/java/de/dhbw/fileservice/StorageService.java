@@ -1,5 +1,6 @@
 package de.dhbw.fileservice;
 
+import de.dhbw.fileservice.entity.DocumentEntity;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,5 +48,11 @@ public class StorageService implements IStorageService{
     @Override
     public void deleteAll() {
 
+    }
+
+    @Override
+    public void delete(DocumentEntity documentEntity) throws IOException {
+        File file = new File("/storage/"+documentEntity.getPath());
+        file.delete();
     }
 }
