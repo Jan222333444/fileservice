@@ -137,7 +137,7 @@ public class FileServiceController {
             String name = file.getOriginalFilename();
             document.setPath(path);
             document.setName(name);
-            documentArchiveRepository.save(document);
+            DocumentEntity id = documentArchiveRepository.save(document);
             FileInputStream fileInputStream = (FileInputStream) file.getInputStream();
             if (path.split("\\.")[1].equals("docx")) {
                 XWPFDocument wordDocument = new XWPFDocument(fileInputStream);
@@ -174,7 +174,8 @@ public class FileServiceController {
             }
 
             String out = "{\n";
-            out += "    \"status\":200\n";
+            out += "    \"status\":200,\n";
+            out += "    \"id\": " + id.getId() + "\n";
             out += "}";
             ResponseEntity response = new ResponseEntity(out, HttpStatus.CREATED);
             return response;
